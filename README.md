@@ -22,18 +22,17 @@
 
 ## 安装
 
-将此仓库克隆到本地，然后在 `~/.claude/settings.json` 中配置 skills 路径：
+将 skill 目录复制到 `~/.claude/skills/` 或通过 settings.json 配置 skill 搜索路径。
+
+**settings.json 方式：**
 
 ```json
 {
-  "skills": [
-    "/Users/bytedance/workspaces/erzhe-skills/erzhe-eat",
-    "/Users/bytedance/workspaces/erzhe-skills/erzhe-wechat-reader"
-  ]
+  "skills": ["<repo-path>/erzhe-eat", "<repo-path>/erzhe-wechat-reader"]
 }
 ```
 
-或者直接将 skill 复制到 `~/.claude/skills/` 目录。
+将 `<repo-path>` 替换为你克隆此仓库的实际路径。
 
 ## 更新
 
