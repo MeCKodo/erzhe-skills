@@ -19,13 +19,41 @@ description: Use when the user gives you content to learn from — articles, blo
 
 | 层级 | 存储位置 | 内容类型 | 示例 |
 |------|---------|---------|------|
+| **技能层** | `~/.claude/skills/<name>/` | 有具体步骤/引用的可复用方法论 | 公众号文章提取、代码 review 流程 |
 | **纪律层** | `~/.claude/CLAUDE.md` | 可执行的规则、约束、工作流纪律 | "编码前必须先读现有代码" |
 | **记忆层** | memory 目录 | 用户偏好、项目背景、工具经验 | 部署踩坑、沟通风格 |
-| **技能层** | `~/.claude/skills/<name>/` | 有具体步骤/引用的可复用方法论 | 公众号文章提取、代码 review 流程 |
 
 **为什么要分三层？** 纪律层管行为（每次启动都会执行），记忆层管上下文（帮助理解用户和项目），技能层管方法（有复杂步骤或引用依赖时才需要）。把复杂方法塞进 CLAUDE.md 会稀释关键规则的效果，把简单规则写成 skill 又增加了一层不必要的文件加载。
 
-### 3. 写入规则
+### 3. 优先级与决策
+
+**优先顺序：Skill > CLAUDE.md > Memory**
+
+提炼内容后，先问"这能变成一个 skill 吗？"，再降级判断：
+
+1. **尝试 Skill（技能层）**：内容包含可复用的步骤、流程、工作方法论，能在多个场景重复使用。优先创建新 skill 或更新已有 skill。
+2. **降级 CLAUDE.md（纪律层）**：没有完整步骤，但是可执行的行为规则，每次启动都应该遵守。当前没有覆盖时才写入。
+3. **降级 Memory（记忆层）**：既不是步骤也不是规则，只是背景知识、工具经验、用户偏好——存 memory。
+
+**为什么要反着来？** 以前的默认顺序是 memory → CLAUDE.md → skill，导致绝大部分内容沉淀在 memory 层，skill 层几乎为空。反过来——优先尝试 skill——能逼着自己去抽象可复用的方法论。能抽象成 skill 的内容最有长期价值，因为 skill 是主动触发、可被检索的方法，而不是被动加载的记忆碎片。
+
+### 4. 写入规则
+
+**Skill（技能层）—— 优先尝试：**
+
+- 使用 /skill-creator 流程创建新 skill：
+  1. 确定 skill 名称、触发条件（description）、核心工作流
+  2. 按 SKILL.md 格式规范写入（frontmatter name + description 必填，body 不超过 500 行）
+  3. 创建到 `~/.claude/skills/<name>/SKILL.md`
+  4. 可选：用 skill-creator 的 packaging 机制打包成 .skill 文件
+     ```bash
+     python -m scripts.package_skill /Users/bytedance/.claude/skills/<name>/
+     ```
+     其中 scripts 来自 skill-creator skill 目录（`/Users/bytedance/.claude/skills/skill-creator/scripts/`）
+- SKILL.md 结构要求：
+  - `name` 和 `description` 必填
+  - description 要包含触发条件（什么时候该用这个 skill），稍微"pushy"一点确保能触发
+  - body 不超过 500 行，超过用 references/ 分层
 
 **CLAUDE.md（纪律层）：**
 
@@ -40,13 +68,7 @@ description: Use when the user gives you content to learn from — articles, blo
 - 先读 `MEMORY.md` 索引，检查是否有可更新的已有记忆
 - 新记忆需要创建对应的 `.md` 文件并添加到 `MEMORY.md` 索引
 
-**Skill（技能层）：**
-
-- 当提炼出需要**具体步骤/引用/脚本**的方法论时，创建新 skill
-- 遵循 skill-creator 的格式规范（frontmatter name + description）
-- 遵循 superpowers:writing-skills 的完整指南
-
-### 4. 汇报
+### 5. 汇报
 
 完成后向用户汇报：
 - 学到了什么（3-5 条核心要点）
